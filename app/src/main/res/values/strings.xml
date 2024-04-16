@@ -1,0 +1,8 @@
+<resources>
+    <string name="ug__app_name">UnsplashGallery</string>
+    <string name="ug__home_top_section_title">Welcome!</string>
+    <string name="ug__search">Search</string>
+    <string name="ug__interests">Interests</string>
+    <string name="ug__homesearch">Search articles</string>
+    <string name="ug__open_navigation_drawer">Open navigation drawer</string>
+</resources>
