@@ -1,5 +1,6 @@
 package com.app.unsplashgallery.ui.home
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -8,6 +9,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -20,7 +22,8 @@ fun HomeTopAppBar(
 ) {
     val title = stringResource(id = R.string.ug__app_name)
     TopAppBar(
-        title = {Text(text = "Unsplash")
+        title = {
+            Text(title)
         },
         navigationIcon = {
             IconButton(onClick = openDrawer) {
@@ -31,15 +34,8 @@ fun HomeTopAppBar(
                 )
             }
         },
-        actions = {
-            IconButton(onClick = { /* TODO: Open search */ }) {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = stringResource(R.string.ug__search)
-                )
-            }
-        },
         backgroundColor = MaterialTheme.colors.surface,
-        elevation = elevation
+        elevation = elevation,
+        modifier = Modifier.fillMaxWidth()
     )
 }

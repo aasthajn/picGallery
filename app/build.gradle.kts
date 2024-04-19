@@ -1,6 +1,7 @@
+@file:Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kapt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
@@ -64,16 +65,25 @@ android {
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.12.0")
+   /* implementation("androidx.core:core-ktx:1.12.0")
+    implementation(libs.androidx.core.ktx)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation(libs.androidx.lifecycle.runtime)
     implementation("androidx.activity:activity-compose:1.8.1")
-    implementation ("androidx.navigation:navigation-compose:2.7.5")
-    implementation("androidx.compose:compose-bom:2023.03.00")
+    implementation(libs.androidx.activity.compose)
+    implementation ("androidx.navigation:navigation-compose:2.7.5")*/
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation ("androidx.compose.ui:ui:${libs.versions.compose}")
-    implementation ("androidx.compose.material:material")
-    implementation ("androidx.compose.ui:ui-tooling:${libs.versions.compose}")
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.compose.ui.tooling.preview)
 
     // Hilt
     implementation(libs.hilt.android)
@@ -81,6 +91,15 @@ dependencies {
     kapt(libs.hilt.compiler)
 
     implementation(libs.retrofit)
+    implementation(libs.retrofit.convertor.gson)
+
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.lifecycle.runtimeCompose)
+    implementation(libs.androidx.lifecycle.viewModelCompose)
+
+
+    implementation(libs.accompanist.appcompat.theme)
+    implementation(libs.accompanist.swiperefresh)
 
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.5")
     testImplementation("junit:junit:4.13.2")
