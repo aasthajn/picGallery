@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.app.unsplashgallery"
+    namespace = "com.app.com.app.picgallery"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.app.unsplashgallery"
+        applicationId = "com.app.com.app.picgallery"
         minSdk = 24
         targetSdk = 33
         versionCode = 1
