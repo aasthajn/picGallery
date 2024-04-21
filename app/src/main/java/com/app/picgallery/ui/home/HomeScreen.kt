@@ -103,7 +103,7 @@ fun HomeScreen(
                                 ShimmerEffect()
                             }
 
-                            imageState.isError -> {
+                            imageState.errorMessage!= null -> {
                                 Image(
                                     painter = painterResource(id = R.drawable.ic_error_placeholder),
                                     contentDescription = uiState.errorMessage,

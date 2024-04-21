@@ -2,6 +2,7 @@ package com.app.picgallery.presentation
 
 import android.app.Application
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -12,14 +13,18 @@ import com.app.picgallery.data.network.ResponseState.Error
 import com.app.picgallery.data.network.ResponseState.Success
 import com.app.picgallery.utils.ImageState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
@@ -46,41 +51,56 @@ class HomeViewModel @Inject constructor(
     private val jobMap = mutableMapOf<String, Job>()
 
     fun loadImage(imageUrl: String, onResult: (ImageState) -> Unit) {
-        jobMap[imageUrl]?.cancel() // Cancel any existing job for this URL
         val job = viewModelScope.launch(Dispatchers.IO) {
             try {
-                val memoryCache = ImageCache.getFromMemoryCache(imageUrl)
-                if (memoryCache != null) {
-                    withContext(Dispatchers.Main) {
-                        onResult(ImageState(bitmap = memoryCache, isLoading = false))
-                    }
-                } else {
-                    val diskCache = DiskCache.getBitmapFromDisk(application, imageUrl)
-                    if (diskCache != null) {
-                        ImageCache.setToMemoryCache(imageUrl, diskCache)
+                if (isActive) {
+                    Log.d("Aastha", "Active ${imageUrl.substring(imageUrl.lastIndex - 15)}")
+                    val memoryCache = ImageCache.getFromMemoryCache(imageUrl)
+                    if (memoryCache != null) {
                         withContext(Dispatchers.Main) {
-                            onResult(ImageState(bitmap = diskCache, isLoading = false))
+                            onResult(ImageState(bitmap = memoryCache, isLoading = false))
                         }
                     } else {
-                        val newBitmap = URL(imageUrl).openStream().use {
-                            BitmapFactory.decodeStream(it)
-                        }
-                        newBitmap?.let {
-                            ImageCache.setToMemoryCache(imageUrl, it)
-                            DiskCache.saveBitmapToDisk(application, imageUrl, it)
+                        val diskCache = DiskCache.getBitmapFromDisk(application, imageUrl)
+                        if (diskCache != null) {
+                            ImageCache.setToMemoryCache(imageUrl, diskCache)
                             withContext(Dispatchers.Main) {
-                                onResult(ImageState(bitmap = it, isLoading = false))
+                                onResult(ImageState(bitmap = diskCache, isLoading = false))
                             }
-                        } ?: run {
-                            withContext(Dispatchers.Main) {
-                                onResult(ImageState(isError = true))
+                        } else {
+                            delay(200)
+                            val newBitmap = URL(imageUrl).openStream().use {
+                                BitmapFactory.decodeStream(it)
+                            }
+                            newBitmap?.let {
+                                ImageCache.setToMemoryCache(imageUrl, it)
+                                DiskCache.saveBitmapToDisk(application, imageUrl, it)
+                                withContext(Dispatchers.Main) {
+                                    Log.d("Aastha", "Success ${imageUrl.substring(imageUrl.lastIndex - 15)}")
+                                    onResult(ImageState(bitmap = it, isLoading = false))
+                                }
+                            } ?: run {
+                                withContext(Dispatchers.Main) {
+                                    onResult(
+                                        ImageState(
+                                            errorMessage = "Image could not be downloaded"
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
                 }
+            } catch (cancellation: CancellationException) {
+                Log.d("Aastha", "Cancelled ${imageUrl.substring(imageUrl.lastIndex - 15)}")
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    onResult(ImageState(isError = true))
+                    onResult(
+                        ImageState(
+                            errorMessage = e.message ?: "Something went wrong "
+
+                        )
+                    )
                 }
             }
         }
@@ -88,9 +108,13 @@ class HomeViewModel @Inject constructor(
     }
 
     fun cancelImageLoad(imageUrl: String) {
-        jobMap[imageUrl]?.cancel()
-        jobMap.remove(imageUrl)
+        viewModelScope.launch {
+            Log.d("Aastha", "Cancel initiated ${imageUrl.substring(imageUrl.lastIndex - 15)}")
+            jobMap[imageUrl]?.cancelAndJoin()
+            jobMap.remove(imageUrl)
+        }
     }
+
     fun refreshPhotos() {
         viewModelState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
