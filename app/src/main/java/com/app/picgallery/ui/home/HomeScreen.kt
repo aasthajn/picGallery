@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.app.picgallery.Constants.Companion.LOG_TAG
 import com.app.picgallery.R
 import com.app.picgallery.data.model.Photo
 import com.app.picgallery.presentation.HomeViewModel
@@ -114,7 +115,7 @@ fun HomeScreen(
                                     contentScale = ContentScale.Crop
                                 )
                                 Log.d(
-                                    "PicGallery",
+                                    LOG_TAG,
                                     "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image displayed"
                                 )
                             }

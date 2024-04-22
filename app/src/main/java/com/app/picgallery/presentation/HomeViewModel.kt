@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.app.picgallery.Constants
+import com.app.picgallery.Constants.Companion.LOG_TAG
 import com.app.picgallery.data.PhotoRepository
 import com.app.picgallery.data.cache.DiskCache
 import com.app.picgallery.data.cache.ImageCache
@@ -54,18 +55,19 @@ class HomeViewModel @Inject constructor(
     private val jobMap = mutableMapOf<String, Job>()
 
     fun loadImage(imageUrl: String, onResult: (ImageState) -> Unit) {
+        val imagePath = imageUrl.substring(imageUrl.lastIndex - 15)
         val job = viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (isActive) {
                     Log.d(
-                        "PicGallery",
-                        "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)}:  Started"
+                        LOG_TAG,
+                        "Job Status: $imagePath:  Started"
                     )
                     val memoryCache = ImageCache.getFromMemoryCache(imageUrl)
                     if (memoryCache != null) {
                         Log.d(
-                            "PicGallery",
-                            "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Memcache success"
+                            LOG_TAG,
+                            "Job Status: $imagePath : Memcache success"
                         )
                         withContext(Dispatchers.Main) {
                             onResult(ImageState(bitmap = memoryCache, isLoading = false))
@@ -74,8 +76,8 @@ class HomeViewModel @Inject constructor(
                         val diskCache = DiskCache.getBitmapFromDisk(application, imageUrl)
                         if (diskCache != null) {
                             Log.d(
-                                "PicGallery",
-                                "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Disk Cache success"
+                                LOG_TAG,
+                                "Job Status: $imagePath : Disk Cache success"
                             )
                             ImageCache.setToMemoryCache(imageUrl, diskCache)
                             withContext(Dispatchers.Main) {
@@ -83,8 +85,8 @@ class HomeViewModel @Inject constructor(
                             }
                         } else {
                             Log.d(
-                                "PicGallery",
-                                "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Download started"
+                                LOG_TAG,
+                                "Job Status: $imagePath : Download started"
                             )
 
                             delay(Constants.IMAGE_LOAD_DELAY)
@@ -96,8 +98,8 @@ class HomeViewModel @Inject constructor(
                                     }
                                     newBitmap?.let {
                                         Log.d(
-                                            "PicGallery",
-                                            "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Download success"
+                                            LOG_TAG,
+                                            "Job Status: $imagePath : Download success"
                                         )
                                         ImageCache.setToMemoryCache(imageUrl, it)
                                         DiskCache.saveBitmapToDisk(application, imageUrl, it)
@@ -107,8 +109,8 @@ class HomeViewModel @Inject constructor(
                                     } ?: run {
                                         withContext(Dispatchers.Main) {
                                             Log.d(
-                                                "PicGallery",
-                                                "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image load error"
+                                                LOG_TAG,
+                                                "Job Status: $imagePath : Image load error"
                                             )
 
                                             onResult(
@@ -121,9 +123,10 @@ class HomeViewModel @Inject constructor(
                                     }
                                 } catch (e: Exception) {
                                     // Handle exceptions related to network or decoding failures
-                                    Log.d(
-                                        "PicGallery",
-                                        "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image load exception"
+                                    Log.e(
+                                        LOG_TAG,
+                                        "Job Status: $imagePath : Load exception",
+                                        e
                                     )
 
                                     withContext(Dispatchers.Main) {
