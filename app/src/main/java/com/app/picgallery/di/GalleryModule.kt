@@ -2,7 +2,6 @@ package com.app.picgallery.di
 
 import android.content.Context
 import com.app.picgallery.Constants
-import com.app.picgallery.Constants.Companion.CACHE_SIZE_BYTES
 import com.app.picgallery.GalleryApplication
 import com.app.picgallery.data.network.APIService
 import com.google.gson.GsonBuilder
@@ -86,5 +85,6 @@ class GalleryModule {
         const val READ_TIMEOUT = 30L
         const val WRITE_TIMEOUT = 30L
         const val CONNECTION_TIMEOUT = 10L
+        const val CACHE_SIZE_BYTES = 10 * 1024 * 1024L // 10 MB
     }
 }
