@@ -3,6 +3,7 @@ package com.app.picgallery.ui.home
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.picgallery.R
@@ -99,9 +101,10 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .aspectRatio(1f)
-                            .fillMaxWidth().border(2.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                            .fillMaxWidth()
+                            .border(2.dp, Color.LightGray, RoundedCornerShape(8.dp))
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable {onNavClick(encodedUrl)}
+                            .clickable { onNavClick(encodedUrl) }
                     ) {
                         when {
                             imageState.bitmap != null -> {
@@ -122,12 +125,20 @@ fun HomeScreen(
                             }
 
                             imageState.errorMessage != null -> {
-                                Image(
-                                    painter = painterResource(id = R.drawable.ic_error_placeholder),
-                                    contentDescription = uiState.errorMessage,
-                                    modifier = Modifier.matchParentSize(),
-                                    contentScale = ContentScale.Fit
-                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { viewModel.loadImage(imageUrl) {} }.background(Color.LightGray), // Retry on tap
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "${imageState.errorMessage} Retry",
+                                        color = Color.Black,
+                                        fontSize = 16.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
                     }
@@ -193,7 +204,7 @@ fun PhotoListContent(
                         ) {
                             Text(
                                 stringResource(id = R.string.pg__home_tap_to_load_content),
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     }

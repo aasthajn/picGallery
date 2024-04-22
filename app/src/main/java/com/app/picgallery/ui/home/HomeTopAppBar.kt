@@ -24,8 +24,7 @@ fun HomeTopAppBar(
         navigationIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_home),
-                contentDescription = stringResource(R.string.pg__home),
-                tint = MaterialTheme.colors.primary
+                contentDescription = stringResource(R.string.pg__home)
             )
         },
         backgroundColor = MaterialTheme.colors.surface,

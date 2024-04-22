@@ -20,7 +20,7 @@ open class NetworkErrorException(
             val errorBody = e.response()?.errorBody()?.string()
 
             return try {//here you can parse the error body that comes from server
-                NetworkErrorException(e.code(), JSONObject(errorBody!!).getString("msg"))
+                NetworkErrorException(e.code(), JSONObject(errorBody!!).getString("error"))
             } catch (_: Exception) {
                 NetworkErrorException(e.code(), "unexpected error!!ً")
             }

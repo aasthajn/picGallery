@@ -43,8 +43,9 @@ class HomeViewModel @Inject constructor(
     private val viewModelState =
         MutableStateFlow(PhotoViewModelState(isLoading = false, currentPageNo = 1))
 
-    val uiState = viewModelState.map { it.toUIState() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, viewModelState.value.toUIState())
+    val uiState = viewModelState.map {
+        it.toUIState()
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, viewModelState.value.toUIState())
 
     init {
         refreshPhotos()
@@ -89,35 +90,47 @@ class HomeViewModel @Inject constructor(
                             delay(Constants.IMAGE_LOAD_DELAY)
                             if (isActive) {
                                 yield()
-                                val newBitmap = URL(imageUrl).openStream().use {
-                                    BitmapFactory.decodeStream(it)
-                                }
-                                newBitmap?.let {
-                                    Log.d(
-                                        "PicGallery",
-                                        "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Download success"
-                                    )
-
-                                    ImageCache.setToMemoryCache(imageUrl, it)
-
-                                    DiskCache.saveBitmapToDisk(application, imageUrl, it)
-
-                                    withContext(Dispatchers.Main) {
-                                        onResult(ImageState(bitmap = it, isLoading = false))
-
+                                try {
+                                    val newBitmap = URL(imageUrl).openStream().use {
+                                        BitmapFactory.decodeStream(it)
                                     }
+                                    newBitmap?.let {
+                                        Log.d(
+                                            "PicGallery",
+                                            "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Download success"
+                                        )
+                                        ImageCache.setToMemoryCache(imageUrl, it)
+                                        DiskCache.saveBitmapToDisk(application, imageUrl, it)
+                                        withContext(Dispatchers.Main) {
+                                            onResult(ImageState(bitmap = it, isLoading = false))
+                                        }
+                                    } ?: run {
+                                        withContext(Dispatchers.Main) {
+                                            Log.d(
+                                                "PicGallery",
+                                                "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image load error"
+                                            )
 
-
-                                } ?: run {
+                                            onResult(
+                                                ImageState(
+                                                    isLoading = false,
+                                                    errorMessage = "Error downloading image."
+                                                )
+                                            )
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    // Handle exceptions related to network or decoding failures
                                     Log.d(
                                         "PicGallery",
-                                        "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image load error"
+                                        "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image load exception"
                                     )
 
                                     withContext(Dispatchers.Main) {
                                         onResult(
                                             ImageState(
-                                                errorMessage = "Image could not be downloaded"
+                                                isLoading = false,
+                                                errorMessage = "Error downloading image."
                                             )
                                         )
                                     }
