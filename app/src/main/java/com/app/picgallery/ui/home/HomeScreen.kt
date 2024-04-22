@@ -62,7 +62,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavClick:(String)->Unit
+    onNavClick: (String) -> Unit
 ) {
     Scaffold(
         scaffoldState = scaffoldState,
@@ -104,14 +104,13 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .border(2.dp, Color.LightGray, RoundedCornerShape(8.dp))
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable { onNavClick(encodedUrl) }
                     ) {
                         when {
                             imageState.bitmap != null -> {
                                 Image(
                                     bitmap = imageState.bitmap.asImageBitmap(),
                                     contentDescription = "Loaded image",
-                                    modifier = Modifier.matchParentSize(),
+                                    modifier = Modifier.matchParentSize().clickable { onNavClick(encodedUrl) },
                                     contentScale = ContentScale.Crop
                                 )
                                 Log.d(
@@ -127,13 +126,11 @@ fun HomeScreen(
                             imageState.errorMessage != null -> {
 
                                 Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .clickable { viewModel.loadImage(imageUrl) {} }.background(Color.LightGray), // Retry on tap
-                                    contentAlignment = Alignment.Center,
-                                ) {
+                                    modifier = Modifier.matchParentSize().background(Color.LightGray),
+                                    contentAlignment = Alignment.Center
+                                )  {
                                     Text(
-                                        text = "${imageState.errorMessage} Retry",
+                                        text = imageState.errorMessage,
                                         color = Color.Black,
                                         fontSize = 16.sp,
                                         textAlign = TextAlign.Center

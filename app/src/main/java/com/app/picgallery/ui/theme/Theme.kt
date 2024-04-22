@@ -27,6 +27,8 @@ private val LightColorScheme = lightColorScheme(
     tertiary = Pink40
 )
 
+
+
 @Composable
 fun UnsplashGalleryTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
