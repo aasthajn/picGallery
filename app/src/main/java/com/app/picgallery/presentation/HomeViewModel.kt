@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.app.picgallery.Constants
 import com.app.picgallery.data.PhotoRepository
 import com.app.picgallery.data.cache.DiskCache
 import com.app.picgallery.data.cache.ImageCache
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import java.net.URL
 import javax.inject.Inject
 
@@ -54,46 +56,86 @@ class HomeViewModel @Inject constructor(
         val job = viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (isActive) {
-                    Log.d("Aastha", "Active ${imageUrl.substring(imageUrl.lastIndex - 15)}")
+                    Log.d(
+                        "PicGallery",
+                        "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)}:  Started"
+                    )
                     val memoryCache = ImageCache.getFromMemoryCache(imageUrl)
                     if (memoryCache != null) {
+                        Log.d(
+                            "PicGallery",
+                            "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Memcache success"
+                        )
                         withContext(Dispatchers.Main) {
                             onResult(ImageState(bitmap = memoryCache, isLoading = false))
                         }
                     } else {
                         val diskCache = DiskCache.getBitmapFromDisk(application, imageUrl)
                         if (diskCache != null) {
+                            Log.d(
+                                "PicGallery",
+                                "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Disk Cache success"
+                            )
                             ImageCache.setToMemoryCache(imageUrl, diskCache)
                             withContext(Dispatchers.Main) {
                                 onResult(ImageState(bitmap = diskCache, isLoading = false))
                             }
                         } else {
-                            delay(200)
-                            val newBitmap = URL(imageUrl).openStream().use {
-                                BitmapFactory.decodeStream(it)
-                            }
-                            newBitmap?.let {
-                                ImageCache.setToMemoryCache(imageUrl, it)
-                                DiskCache.saveBitmapToDisk(application, imageUrl, it)
-                                withContext(Dispatchers.Main) {
-                                    Log.d("Aastha", "Success ${imageUrl.substring(imageUrl.lastIndex - 15)}")
-                                    onResult(ImageState(bitmap = it, isLoading = false))
+                            Log.d(
+                                "PicGallery",
+                                "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Download started"
+                            )
+
+                            delay(Constants.IMAGE_LOAD_DELAY)
+                            if (isActive) {
+                                yield()
+                                val newBitmap = URL(imageUrl).openStream().use {
+                                    BitmapFactory.decodeStream(it)
                                 }
-                            } ?: run {
-                                withContext(Dispatchers.Main) {
-                                    onResult(
-                                        ImageState(
-                                            errorMessage = "Image could not be downloaded"
-                                        )
+                                newBitmap?.let {
+                                    Log.d(
+                                        "PicGallery",
+                                        "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Download success"
                                     )
+
+                                    ImageCache.setToMemoryCache(imageUrl, it)
+
+                                    DiskCache.saveBitmapToDisk(application, imageUrl, it)
+
+                                    withContext(Dispatchers.Main) {
+                                        onResult(ImageState(bitmap = it, isLoading = false))
+
+                                    }
+
+
+                                } ?: run {
+                                    Log.d(
+                                        "PicGallery",
+                                        "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image load error"
+                                    )
+
+                                    withContext(Dispatchers.Main) {
+                                        onResult(
+                                            ImageState(
+                                                errorMessage = "Image could not be downloaded"
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             } catch (cancellation: CancellationException) {
-                Log.d("Aastha", "Cancelled ${imageUrl.substring(imageUrl.lastIndex - 15)}")
+                Log.d(
+                    "PicGallery",
+                    "Job status:  ${imageUrl.substring(imageUrl.lastIndex - 15)} : Cancelled"
+                )
             } catch (e: Exception) {
+                Log.d(
+                    "PicGallery",
+                    "Job status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Exception"
+                )
                 withContext(Dispatchers.Main) {
                     onResult(
                         ImageState(
@@ -109,7 +151,10 @@ class HomeViewModel @Inject constructor(
 
     fun cancelImageLoad(imageUrl: String) {
         viewModelScope.launch {
-            Log.d("Aastha", "Cancel initiated ${imageUrl.substring(imageUrl.lastIndex - 15)}")
+            Log.d(
+                "PicGallery",
+                "Job status:  ${imageUrl.substring(imageUrl.lastIndex - 15)} : Cancel Initiated"
+            )
             jobMap[imageUrl]?.cancelAndJoin()
             jobMap.remove(imageUrl)
         }

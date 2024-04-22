@@ -8,6 +8,7 @@ class Constants {
         const val WRITE_TIMEOUT = 30
         const val CONNECTION_TIMEOUT = 10
         const val CACHE_SIZE_BYTES = 10 * 1024 * 1024L // 10 MB
+        const val IMAGE_LOAD_DELAY = 0L //change to 2000L for cancel
     }
 
 }

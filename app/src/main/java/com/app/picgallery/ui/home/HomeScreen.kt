@@ -1,6 +1,7 @@
 package com.app.picgallery.ui.home
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.app.com.app.picgallery.R
+import com.app.picgallery.R
 
 import com.app.picgallery.data.model.Photo
 import com.app.picgallery.presentation.HomeViewModel
@@ -82,7 +83,8 @@ fun HomeScreen(
                 state = listState
             ) {
                 items(hasPhotosUiState.photoList) { photo ->
-                    val imageState = loadImageFromUrl(photo.getImageUrl(), viewModel).value
+                    val imageUrl = photo.getImageUrl()
+                    val imageState = loadImageFromUrl(imageUrl, viewModel).value
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
@@ -96,6 +98,10 @@ fun HomeScreen(
                                     contentDescription = "Loaded image",
                                     modifier = Modifier.matchParentSize(),
                                     contentScale = ContentScale.Crop
+                                )
+                                Log.d(
+                                    "PicGallery",
+                                    "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image displayed"
                                 )
                             }
 
