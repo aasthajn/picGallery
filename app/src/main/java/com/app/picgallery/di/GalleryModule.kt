@@ -33,7 +33,7 @@ class GalleryModule {
     @Provides
     @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder().baseUrl(Constants.Gallery.MOCK_URL).client(client)
+        return Retrofit.Builder().baseUrl(Constants.BASE_URL).client(client)
             .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
             .build()
     }
