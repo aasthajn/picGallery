@@ -3,4 +3,6 @@
     <string name="pg__home_top_section_title">Welcome!</string>
     <string name="pg__home">Home Button</string>
     <string name="pg__home_tap_to_load_content">Tap to load content</string>
+    <string name="pg__details">Pic Details</string>
+    <string name="pg__details_desc">Back Button</string>
 </resources>

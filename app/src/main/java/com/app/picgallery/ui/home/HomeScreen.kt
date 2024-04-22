@@ -3,6 +3,8 @@ package com.app.picgallery.ui.home
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -13,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarResult
@@ -28,6 +31,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -37,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.picgallery.R
-
 import com.app.picgallery.data.model.Photo
 import com.app.picgallery.presentation.HomeViewModel
 import com.app.picgallery.presentation.PhotoUIState
@@ -47,13 +51,16 @@ import com.app.picgallery.utils.LoadingContent
 import com.app.picgallery.utils.ShimmerEffect
 import com.app.picgallery.utils.SnackbarHost
 import com.app.picgallery.utils.rememberContentPaddingForScreen
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    onNavClick:(String)->Unit
 ) {
     Scaffold(
         scaffoldState = scaffoldState,
@@ -69,7 +76,9 @@ fun HomeScreen(
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         PhotoListContent(
             uiState = uiState,
-            onRefresh = { viewModel.refreshPhotos() },
+            onRefresh = {
+                viewModel.refreshPhotos()
+            },
             modifier = modifier.padding(innerPadding)
         ) { hasPhotosUiState, _ ->
             val contentPadding = rememberContentPaddingForScreen(additionalTop = 8.dp)
@@ -85,11 +94,14 @@ fun HomeScreen(
                 items(hasPhotosUiState.photoList) { photo ->
                     val imageUrl = photo.getImageUrl()
                     val imageState = loadImageFromUrl(imageUrl, viewModel).value
+                    val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .aspectRatio(1f)
-                            .fillMaxWidth()
+                            .fillMaxWidth().border(2.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {onNavClick(encodedUrl)}
                     ) {
                         when {
                             imageState.bitmap != null -> {
@@ -109,7 +121,7 @@ fun HomeScreen(
                                 ShimmerEffect()
                             }
 
-                            imageState.errorMessage!= null -> {
+                            imageState.errorMessage != null -> {
                                 Image(
                                     painter = painterResource(id = R.drawable.ic_error_placeholder),
                                     contentDescription = uiState.errorMessage,
@@ -124,7 +136,7 @@ fun HomeScreen(
         }
 
         val message = uiState.errorMessage
-        if(uiState.errorMessage?.isNotEmpty() == true) {
+        if (uiState.errorMessage?.isNotEmpty() == true) {
             LaunchedEffect(message, key2 = scaffoldState, block = {
                 val snackbarResult = message?.let {
                     scaffoldState.snackbarHostState.showSnackbar(

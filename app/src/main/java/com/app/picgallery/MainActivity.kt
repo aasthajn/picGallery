@@ -33,14 +33,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             UnsplashGalleryTheme {
                 val navController = rememberNavController()
-                val navigationActions = remember(navController) {NavigationActions(navController)}
+                val navigationActions = remember(navController) { NavigationActions(navController) }
                 val coroutineScope = rememberCoroutineScope()
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    NavGraph(navController = navController, navigationActions = navigationActions, onNavClick = { })
+                    NavGraph(navController = navController)
                 }
             }
         }
