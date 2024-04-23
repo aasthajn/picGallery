@@ -1,6 +1,5 @@
 package com.app.picgallery.ui.home
 
-import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,7 +35,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,7 +55,7 @@ import com.app.picgallery.utils.rememberContentPaddingForScreen
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-@SuppressLint("SuspiciousIndentation")
+//Home screen Composable
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -95,51 +93,7 @@ fun HomeScreen(
                 state = listState
             ) {
                 items(hasPhotosUiState.photoList) { photo ->
-                    val imageUrl = photo.getImageUrl()
-                    val imageState = loadImageFromUrl(imageUrl, viewModel).value
-                    val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .aspectRatio(1f)
-                            .fillMaxWidth()
-                            .border(2.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                            .clip(RoundedCornerShape(8.dp))
-                    ) {
-                        when {
-                            imageState.bitmap != null -> {
-                                Image(
-                                    bitmap = imageState.bitmap.asImageBitmap(),
-                                    contentDescription = "Loaded image",
-                                    modifier = Modifier.matchParentSize().clickable { onNavClick(encodedUrl) },
-                                    contentScale = ContentScale.Crop
-                                )
-                                Log.d(
-                                    LOG_TAG,
-                                    "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image displayed"
-                                )
-                            }
-
-                            imageState.isLoading -> {
-                                ShimmerEffect()
-                            }
-
-                            imageState.errorMessage != null -> {
-
-                                Box(
-                                    modifier = Modifier.matchParentSize().background(Color.LightGray),
-                                    contentAlignment = Alignment.Center
-                                )  {
-                                    Text(
-                                        text = imageState.errorMessage,
-                                        color = Color.Black,
-                                        fontSize = 16.sp,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    GridItem(photo, viewModel, onNavClick)
                 }
             }
         }
@@ -161,10 +115,67 @@ fun HomeScreen(
     }
 }
 
+// Composable to display "photo" item from list
+// UI state after lazy loading and other error scenarios is handled
+@Composable
+fun GridItem(photo: Photo, viewModel: HomeViewModel, onNavClick: (String) -> Unit) {
+    val imageUrl = photo.getImageUrl()
+    val imageState = loadImageFromUrl(imageUrl, viewModel).value
+    val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .aspectRatio(1f)
+            .fillMaxWidth()
+            .border(2.dp, Color.LightGray, RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
+    ) {
+        when {
+            imageState.bitmap != null -> {
+                Image(
+                    bitmap = imageState.bitmap.asImageBitmap(),
+                    contentDescription = "Loaded image",
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { onNavClick(encodedUrl) },
+                    contentScale = ContentScale.Crop
+                )
+                Log.d(
+                    LOG_TAG,
+                    "Job Status: ${imageUrl.substring(imageUrl.lastIndex - 15)} : Image displayed"
+                )
+            }
+
+            imageState.isLoading -> {
+                ShimmerEffect()
+            }
+
+            imageState.errorMessage != null -> {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = imageState.errorMessage,
+                        color = Color.Black,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+//Extension function to contruct the imageurl from thumbnail params
 private fun Photo.getImageUrl(): String {
     return "${this.thumbnail.domain}/${this.thumbnail.basePath}/0/${this.thumbnail.key}"
 }
 
+//composable to manage the screen states(empty, loading and Show Content)
 @Composable
 fun PhotoListContent(
     uiState: PhotoUIState,
@@ -213,6 +224,8 @@ fun PhotoListContent(
 
 }
 
+//Composable function to load image from Cache or API and cancel download when composable is getting destroyed
+//returns the Image state(Loading, Error, Success (Bitmap)) after completion
 @Composable
 fun loadImageFromUrl(imageUrl: String, viewModel: HomeViewModel): State<ImageState> {
     val state = remember { mutableStateOf(ImageState(isLoading = true)) }
@@ -221,9 +234,7 @@ fun loadImageFromUrl(imageUrl: String, viewModel: HomeViewModel): State<ImageSta
         val onResult: (ImageState) -> Unit = { newState ->
             state.value = newState
         }
-
         viewModel.loadImage(imageUrl, onResult)
-
         onDispose {
             // Call cancelImageLoad when the composable is disposed
             viewModel.cancelImageLoad(imageUrl)

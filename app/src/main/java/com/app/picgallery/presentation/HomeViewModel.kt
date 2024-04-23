@@ -52,8 +52,10 @@ class HomeViewModel @Inject constructor(
         refreshPhotos()
     }
 
+    //map of imageUrls and corresponding image download map
     private val jobMap = mutableMapOf<String, Job>()
 
+    //imageState is returned after getting image from memcache, diskcache or downloading from internet
     fun loadImage(imageUrl: String, onResult: (ImageState) -> Unit) {
         val imagePath = imageUrl.substring(imageUrl.lastIndex - 15)
         val job = viewModelScope.launch(Dispatchers.IO) {
@@ -125,8 +127,7 @@ class HomeViewModel @Inject constructor(
                                     // Handle exceptions related to network or decoding failures
                                     Log.e(
                                         LOG_TAG,
-                                        "Job Status: $imagePath : Load exception",
-                                        e
+                                        "Job Status: $imagePath : Load exception", e
                                     )
 
                                     withContext(Dispatchers.Main) {
@@ -143,6 +144,7 @@ class HomeViewModel @Inject constructor(
                     }
                 }
             } catch (cancellation: CancellationException) {
+                // When we cancel the job in onDispose, this gets called
                 Log.d(
                     "PicGallery",
                     "Job status:  ${imageUrl.substring(imageUrl.lastIndex - 15)} : Cancelled"
@@ -165,6 +167,7 @@ class HomeViewModel @Inject constructor(
         jobMap[imageUrl] = job // Store the job
     }
 
+    //Cancel Image Download for Job with this imageUrl
     fun cancelImageLoad(imageUrl: String) {
         viewModelScope.launch {
             Log.d(

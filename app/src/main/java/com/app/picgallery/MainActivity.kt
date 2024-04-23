@@ -31,9 +31,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             UnsplashGalleryTheme {
                 val navController = rememberNavController()
-              // A surface container using the 'background' color from the theme
+                // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize().padding(8.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     NavGraph(navController = navController)
@@ -43,25 +45,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    UnsplashGalleryTheme {
-        Greeting("Android")
-    }
-}
-
-@Composable
-fun rememberContentPaddingForScreen(additionalTop: Dp = 0.dp) =
-    WindowInsets.systemBars
-        .only(WindowInsetsSides.Bottom)
-        .add(WindowInsets(top = additionalTop))
-        .asPaddingValues()
